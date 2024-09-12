@@ -1,3 +1,5 @@
+Projeyi görüntülemek için [bu bağlantıya](https://abdulkadir-erdeger.github.io/sending-data-from-video-to-xapi/) tıklayın.
+
 # Video SCORM Render Projesi
 
 Bu proje, kullanıcıların video dosyalarını seçip SCORM formatında bir zip dosyası olarak dışa aktarmalarına olanak tanır.
@@ -14,6 +16,8 @@ Bu proje, kullanıcıların video dosyalarını seçip SCORM formatında bir zip
 3. Oluşan SCORM zip dosyası otomatik olarak indirilecektir.
 
 ## SCORM URL Parametreleri
+
+Otomatik url oluşturmak için [bu bağlantıya](https://abdulkadir-erdeger.github.io/create-xapi-url/) tıklayın.
 
 SCORM içeriklerinin doğru bir şekilde izlenmesi ve takip edilmesi için URL'ye eklenmesi gereken bazı query string parametreleri vardır. Bu parametreler, içeriğin LRS (Learning Record Store) ve LMS (Learning Management System) ile doğru bir şekilde entegre olmasını sağlar. Gerekli değerler şunlardır:
 
