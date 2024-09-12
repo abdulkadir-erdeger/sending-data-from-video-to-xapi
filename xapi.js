@@ -22,7 +22,7 @@ function sendXAPIData(verb, statement) {
             display: { "en-US": verb }
         },
         object: {
-            id: document.location.href.pathname,
+            id: document.location.href,
             definition: {
                 name: { "en-US": "Video" },
                 description: { "en-US": statement }
@@ -38,7 +38,7 @@ function getLastVideoTime() {
         let xhr = new XMLHttpRequest();
 
         // Video'nun tanımlayıcı URL'si
-        let videoUrl = encodeURIComponent(window.location.href.pathname);
+        let videoUrl = encodeURIComponent(window.location.href);
 
         // Aktör bilgilerini JSON formatında oluştur ve encode et
         let actorMail = JSON.stringify({
