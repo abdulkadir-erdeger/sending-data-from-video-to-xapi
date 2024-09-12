@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCORM Video Dönüştürücü</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <style>
+      .container {
+        margin-top: 20px;
+      }
+      video {
+        width: 100%;
+        height: auto;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card p-5">
+            <h1 class="text-center mb-4">Video SCORM Dönüştürücü</h1>
+            <div class="form-group">
+              <div class="input-group mb-3">
+                <input type="file" class="form-control" id="videoInput" />
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-primary" id="renderBtn">
+                Scorm'a Çevir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+      integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+      integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <script src="jszip.min.js"></script>
+    <script>
+      let videoInput = document.getElementById("videoInput");
+      let renderBtn = document.getElementById("renderBtn");
+
+      // SCORM paketi render etme işlemi
+      renderBtn.addEventListener("click", function () {
+        createScormPackage();
+      });
+
+      function createScormPackage() {
+        // SCORM manifest dosyasını oluştur
+        let scormManifest = `
+                <manifest xmlns="http://www.imsglobal.org/xsd/imscp_v1p1"
+                    xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://www.imsglobal.org/xsd/imscp_v1p1 imscp_v1p1.xsd">
+                    <metadata>
+                        <schema>ADL SCORM</schema>
+                        <schemaversion>1.2</schemaversion>
+                    </metadata>
+                    <organizations default="default_org">
+                        <organization identifier="default_org">
+                            <item identifier="item_1" identifierref="resource_1">
+                                <title>SCORM Video</title>
+                            </item>
+                        </organization>
+                    </organizations>
+                    <resources>
+                        <resource identifier="resource_1" type="webcontent" adlcp:scormtype="sco" href="index.html">
+                            <file href="index.html"/>
+                            <file href="xapi.js"/>
+                            <file href="video.mp4"/>
+                        </resource>
+                    </resources>
+                </manifest>
+            `;
+
+        // SCORM paketi için zip dosyasını oluştur
+        let zip = new JSZip();
+        zip.file("imsmanifest.xml", scormManifest);
+        zip.file("index.html", createHtmlFile());
+        zip.file("xapi.js", createXAPIFile());
+
+        // Video dosyasını zip içine ekle
+        let videoFile = videoInput.files[0];
+        zip.file("video.mp4", videoFile);
+
+        // Zip dosyasını indir
+        zip.generateAsync({ type: "blob" }).then(function (blob) {
+          let link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "scorm_package.zip";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        });
+      }
+
+      function createHtmlFile() {
+        return `
+        <!DOCTYPE html>
+        <html lang="tr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>SCORM Video Oynatıcı</title>
+            <style>
+                video {
+                    width: 100%;
+                    max-width: 800px;
+                    height: auto;
+                }
+                .container {
+                    margin: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                   <video id="videoPlayer" controls>
+                    <source src="video.mp4" type="video/mp4">
+                    Tarayıcınız video öğesini desteklemiyor.
+                </video>
+            </div>
+          
+           
+            <script src="xapi.js">
+           <\/script>
+            <script>
+            let videoPlayer = document.getElementById('videoPlayer');
+            
+            getLastVideoTime().then((lastTime) => {
+                videoPlayer.currentTime = parseFloat(lastTime);
+            });
+            
+            videoPlayer.addEventListener('play', function () {
+                sendXAPIData('played', 'Video başladı.');
+            });
+            videoPlayer.addEventListener('pause', function () {
+                let currentTime = Math.floor(videoPlayer.currentTime);
+                sendXAPIData('paused', \`Video \${currentTime} saniyede durdu.\`);
+            });
+            videoPlayer.addEventListener('ended', function () {
+                sendXAPIData('completed', 'Video tamamlandı.');
+            });
+            <\/script>
+           
+        </body>
+        </html>
+    `;
+      }
+
+      // SCORM paketi içindeki xapi.js dosyasını oluştur
+      function createXAPIFile() {
+        return `
+        // URL parametrelerini almak için
+        let queryParams = new URLSearchParams(window.location.search);
+        let lrsEndpoint = queryParams.get('endpoint');
+        let auth = queryParams.get('auth');
+        let actor = JSON.parse(queryParams.get('actor'));
+
+        function sendXAPIData(verb, statement) {
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", lrsEndpoint + "statements", true);
+            xhr.setRequestHeader("Authorization", auth);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.setRequestHeader("X-Experience-API-Version", "1.0.3");
+
+            let xAPIData = {
+                actor: {
+                    name: actor.name[0],
+                    mbox: actor.mbox[0]
+                },
+                verb: {
+                    id: \`http://adlnet.gov/expapi/verbs/\${verb}\`,
+                    display: { "en-US": verb }
+                },
+                object: {
+                    id: document.location.href,
+                    definition: {
+                        name: { "en-US": "Video" },
+                        description: { "en-US": statement }
+                    }
+                }
+            };
+
+            xhr.send(JSON.stringify(xAPIData));
+        }
+
+        function getLastVideoTime() {
+            return new Promise((resolve, reject) => {
+                let xhr = new XMLHttpRequest();
+
+                // Video'nun tanımlayıcı URL'si
+                let videoUrl = encodeURIComponent(window.location.href);
+
+                // Aktör bilgilerini JSON formatında oluştur ve encode et
+                let actorJson = JSON.stringify({
+                    mbox: actor.mbox[0]
+                });
+                let actorEncoded = encodeURIComponent(actorJson);
+
+                // XAPI endpoint URL'si
+                let url = \`\${lrsEndpoint}statements?agent=\${actorEncoded}&activity=\${videoUrl}\`;
+
+                xhr.open("GET", url, true);
+                xhr.setRequestHeader("Authorization", auth);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.setRequestHeader("X-Experience-API-Version", "1.0.3");
+
+                xhr.onload = function () {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        let response = JSON.parse(xhr.responseText);
+                        if (response.statements && response.statements.length > 0) {
+                            let lastStatement = response.statements[0];
+                            if (lastStatement.verb.id === "http://adlnet.gov/expapi/verbs/paused") {
+                                let match = lastStatement.object.definition.description['en-US'].match(/Video (\\d+) saniyede durdu./);
+                                if (match) {
+                                    resolve(match[1]);
+                                } else {
+                                    resolve(0);
+                                }
+                            } else {
+                                resolve(0);
+                            }
+                        } else {
+                            resolve(0);
+                        }
+                    } else {
+                        reject(new Error(\`Request failed with status \${xhr.status}\`));
+                    }
+                };
+
+                xhr.onerror = function () {
+                    reject(new Error("Network error"));
+                };
+
+                xhr.send();
+            });
+        }
+    `;
+      }
+    </script>
+  </body>
+</html>
