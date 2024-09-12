@@ -196,7 +196,7 @@
                     display: { "en-US": verb }
                 },
                 object: {
-                    id: document.location.href,
+                    id: document.location.href.pathname,
                     definition: {
                         name: { "en-US": "Video" },
                         description: { "en-US": statement }
@@ -212,7 +212,7 @@
                 let xhr = new XMLHttpRequest();
 
                 // Video'nun tanımlayıcı URL'si
-                let videoUrl = encodeURIComponent(window.location.href);
+                let videoUrl = encodeURIComponent(window.location.href.pathname);
 
                 // Aktör bilgilerini JSON formatında oluştur ve encode et
                 let actorJson = JSON.stringify({
