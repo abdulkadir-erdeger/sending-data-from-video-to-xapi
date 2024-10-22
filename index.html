@@ -64,6 +64,11 @@
 
       // SCORM paketi render etme işlemi
       renderBtn.addEventListener("click", function () {
+        let videoFileInput = document.getElementById("videoInput");
+        if (!videoFileInput.files.length) {
+          alert("Lütfen bir video dosyası seçiniz!");
+          return;
+        }
         createScormPackage();
       });
 
@@ -103,13 +108,14 @@
 
         // Video dosyasını zip içine ekle
         let videoFile = videoInput.files[0];
+        const zipFileName = videoInput.files[0].name;
         zip.file("video.mp4", videoFile);
 
         // Zip dosyasını indir
         zip.generateAsync({ type: "blob" }).then(function (blob) {
           let link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
-          link.download = "scorm_package.zip";
+          link.download = `updated_${zipFileName}.zip`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -127,8 +133,8 @@
             <style>
                 video {
                     width: 100%;
-                    max-width: 800px;
                     height: auto;
+                    max-width: 85%;
                 }
                 .container {
                     margin: 20px;
